@@ -1,8 +1,4 @@
-const ipcRenderer = DiscordUtilities.executeJS(`Object.keys(require('electron').ipcRenderer)`).slice(3).reduce((newElectron, key) => {
-   newElectron[key] = DiscordUtilities.executeJS(`require('electron').ipcRenderer[${JSON.stringify(key)}].bind(require('electron').ipcRenderer)`);
-
-   return newElectron;
-}, {});
+import { ipcRenderer } from '../node/electron.js';
 
 export default {
    displayName: 'DevTools Warning',
