@@ -5,10 +5,10 @@ export default {
    id: 'remove-minimum-size',
    default: true,
    executor: async () => {
-      ipcRenderer.send('REMOVE_MINIMUM_SIZE', 1, 1);
+      ipcRenderer.send('DISCORD_UTILITIES_REMOVE_MINIMUM_SIZE', 1, 1);
 
       return () => {
-         ipcRenderer.send('REMOVE_MINIMUM_SIZE', 940, 500);
+         ipcRenderer.send('DISCORD_UTILITIES_REMOVE_MINIMUM_SIZE', 940, 500);
       };
    }
 };
