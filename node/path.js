@@ -1,0 +1,1 @@
+export default DiscordUtilities.executeJS(`require("path")`);
