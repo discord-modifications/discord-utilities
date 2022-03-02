@@ -6,6 +6,7 @@ export default {
    default: true,
    executor: async () => {
       await Webpack.whenReady;
+      if (window.__SENTRY__ === void 0) return () => {};
 
       const Analytics = Webpack.findByProps('getSuperPropertiesBase64');
       const Reporter = Webpack.findByProps('submitLiveCrashReport');
