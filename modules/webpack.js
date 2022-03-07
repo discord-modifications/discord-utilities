@@ -42,8 +42,6 @@ export default new class Webpack {
 
          Dispatcher.subscribe(ActionTypes.START_SESSION, listener);
       }));
-
-      window.Webpack = this;
    }
 
    async waitFor(filter, { retries = 100, all = false, forever = false, delay = 50 } = {}) {
