@@ -18,6 +18,16 @@ export default class Patcher {
       for (const patch of patches) patch.unpatch();
    }
 
+   static create(name) {
+      return {
+         getPatchesByCaller: Patcher.getPatchesByCaller,
+         instead: (...args) => Patcher.instead(name, ...args),
+         after: (...args) => Patcher.after(name, ...args),
+         before: (...args) => Patcher.before(name, ...args),
+         unpatchAll: () => Patcher.unpatchAll(name)
+      };
+   }
+
    static makeOverride(patch) {
       return function () {
          let returnValue, args = arguments;

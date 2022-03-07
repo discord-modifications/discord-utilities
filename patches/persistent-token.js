@@ -1,4 +1,7 @@
+import Patchers from '../modules/patcher.js';
 import Webpack from '../modules/webpack.js';
+
+const Patcher = Patchers.create('persistent-token');
 
 export default {
    displayName: 'Persistent Token',
@@ -8,11 +11,8 @@ export default {
       await Webpack.whenReady;
 
       const Token = Webpack.findByProps('hideToken');
-      Token._hideToken = Token.hideToken;
-      Token.hideToken = () => void 0;
+      Patcher.instead(Token, 'hideToken', () => { });
 
-      return () => {
-         Token._hideToken = hideToken;
-      };
+      return () => Patcher.unpatchAll();
    }
 };
