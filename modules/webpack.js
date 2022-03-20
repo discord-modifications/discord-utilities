@@ -58,35 +58,31 @@ export default new class Webpack {
 
    request(cache = true) {
       if (cache && this.cache) return this.cache;
-      let req = undefined;
 
-      if (Array.isArray(window[this.chunkName])) {
-         const chunk = [[this.id], {}, __webpack_require__ => req = __webpack_require__];
-         webpackChunkdiscord_app.push(chunk);
-         webpackChunkdiscord_app.splice(webpackChunkdiscord_app.indexOf(chunk), 1);
-      }
+      const res = window[this.chunkName].push([[this.id], [], p => p]);
+      window[this.chunkName].pop();
 
-      if (!req) console.warn('[Webpack] Got empty cache.');
-      if (cache) this.cache = req;
+      if (!res) console.warn('[Webpack] Got empty cache.');
+      if (cache) this.cache = res;
 
-      return req;
+      return res;
    }
 
    findModule(filter, { all = false, cache = true, force = false } = {}) {
       if (typeof (filter) !== 'function') return void 0;
 
-      const __webpack_require__ = this.request(cache);
+      const req = this.request(cache);
       const found = [];
 
-      if (!__webpack_require__) return;
+      if (!req) return;
 
       const wrapFilter = function (module, index) {
          try { return filter(module, index); }
          catch { return false; }
       };
 
-      for (const id in __webpack_require__.c) {
-         const module = __webpack_require__.c[id].exports;
+      for (const id in req.c) {
+         const module = req.c[id].exports;
          if (!module || module === window) continue;
 
          switch (typeof module) {
