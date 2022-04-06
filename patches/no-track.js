@@ -13,24 +13,28 @@ export default {
       const [
          Analytics,
          Reporter,
-         Handlers
+         Handlers,
+         Statistics
       ] = Webpack.findByProps(
          ['getSuperPropertiesBase64'],
          ['submitLiveCrashReport'],
          ['analyticsTrackingStoreMaker'],
+         ['trackDiscoveryViewed'],
          { bulk: true }
       );
 
+      const statistics = Object.keys(Statistics).filter(s => ~s.indexOf('track'));
+      statistics.map(s => Patcher.instead(Statistics, s, () => { }));
       Patcher.instead(Analytics, 'track', () => { });
       Patcher.instead(Handlers.AnalyticsActionHandlers, 'handleTrack', () => { });
       Patcher.instead(Reporter, 'submitLiveCrashReport', () => { });
 
-      if (window.__SENTRY__) {
-         const Sentry = {
-            main: window.__SENTRY__.hub,
-            client: window.__SENTRY__.hub.getClient()
-         };
+      const Sentry = {
+         main: window.__SENTRY__?.hub,
+         client: window.__SENTRY__?.hub?.getClient()
+      };
 
+      if (Sentry.main && Sentry.client) {
          Sentry.client.close();
          Sentry.main.getStackTop().scope.clear();
          Sentry.main.getScope().clear();
@@ -53,7 +57,8 @@ export default {
 
       return () => {
          Patcher.unpatchAll();
-         if (window.__SENTRY__) {
+
+         if (Sentry.main && Sentry.client) {
             Sentry.client.getOptions().enabled = true;
             window.console = window.__oldConsole;
          }
