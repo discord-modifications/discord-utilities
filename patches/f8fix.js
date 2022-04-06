@@ -7,7 +7,6 @@ function keyUp(event) {
 export default {
    displayName: 'F8 Fix',
    id: 'f8-fix',
-   default: true,
    executor: async () => {
       document.addEventListener('keyup', keyUp);
 

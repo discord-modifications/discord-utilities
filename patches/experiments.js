@@ -3,7 +3,6 @@ import Webpack from '../modules/webpack.js';
 export default {
    displayName: 'Experiments',
    id: 'experiments',
-   default: true,
    executor: async () => {
       await Webpack.whenReady;
 

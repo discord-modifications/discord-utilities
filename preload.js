@@ -1,4 +1,5 @@
 const { contextBridge } = require('electron');
+const manifest = require('./index.json');
 const path = require('path');
 
 const DiscordUtilites = {
@@ -7,7 +8,8 @@ const DiscordUtilites = {
    },
    getBasePath() {
       return path.resolve(__dirname, "..");
-   }
+   },
+   manifest
 };
 
 // Expose internals

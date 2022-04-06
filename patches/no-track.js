@@ -6,7 +6,6 @@ const Patcher = Patchers.create('no-track');
 export default {
    displayName: 'No-Track',
    id: 'no-track',
-   default: true,
    executor: async () => {
       await Webpack.whenReady;
 

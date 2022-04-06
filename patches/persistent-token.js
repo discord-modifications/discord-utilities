@@ -6,7 +6,6 @@ const Patcher = Patchers.create('persistent-token');
 export default {
    displayName: 'Persistent Token',
    id: 'persistent-token',
-   default: true,
    executor: async () => {
       await Webpack.whenReady;
 

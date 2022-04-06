@@ -3,5 +3,14 @@
    "author": "eternal",
    "id": "eternal.discord-utilities",
    "description": "Adds several utilitles to discord.",
-   "version": "1.0.0"
+   "version": "1.0.0",
+   "settings": {
+      "no-track": true,
+      "persistent-token": true,
+      "minimum-size": true,
+      "f8fix": true,
+      "experiments": true,
+      "devtools-warning": true,
+      "always-on-top": false
+   }
 }

@@ -3,7 +3,6 @@ import { ipcRenderer } from '../node/electron.js';
 export default {
    displayName: 'DevTools Warning',
    id: 'devtools-warning',
-   default: true,
    executor: async () => {
       ipcRenderer.send('DISCORD_UTILITIES_REMOVE_DEVTOOLS_WARNING');
 
