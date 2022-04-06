@@ -10,24 +10,38 @@ export default {
    executor: async () => {
       await Webpack.whenReady;
 
-      const [
-         Analytics,
-         Reporter,
-         Handlers,
-         Statistics
-      ] = Webpack.findByProps(
-         ['getSuperPropertiesBase64'],
-         ['submitLiveCrashReport'],
-         ['analyticsTrackingStoreMaker'],
-         ['trackDiscoveryViewed'],
-         { bulk: true }
-      );
+      const blacklist = [
+         'useAndTrack',
+         'TextTrack'
+      ];
 
-      const statistics = Object.keys(Statistics).filter(s => ~s.indexOf('track'));
-      statistics.map(s => Patcher.instead(Statistics, s, () => { }));
-      Patcher.instead(Analytics, 'track', () => { });
-      Patcher.instead(Handlers.AnalyticsActionHandlers, 'handleTrack', () => { });
-      Patcher.instead(Reporter, 'submitLiveCrashReport', () => { });
+      const Trackers = Webpack.findModules(m => Object.keys(m).find(e => ~e.toLowerCase().indexOf('track') && !blacklist.some(b => e.includes(b))));
+      const Reporters = Webpack.findModules(m => Object.keys(m).find(e => ~e.toLowerCase().indexOf('crashreport') && !blacklist.some(b => e.includes(b))));
+
+      function traverse(object, filter) {
+         const keys = [...Object.keys(object), ...Object.keys(object.__proto__)];
+         for (const key of keys.filter(filter)) {
+            if (!['function', 'object'].includes(typeof object[key])) {
+               continue;
+            }
+
+            if (typeof object[key] === 'object') {
+               traverse(object[key], filter);
+            } else {
+               try {
+                  Patcher.instead(object, key, () => { });
+               } catch { }
+            }
+         }
+      };
+
+      for (let i = 0; i < Trackers.length; i++) {
+         traverse(Trackers[i], key => ~key.toLowerCase().indexOf('track') && !blacklist.some(b => key.includes(b)));
+      }
+
+      for (let i = 0; i < Reporters.length; i++) {
+         traverse(Reporters[i], key => ~key.toLowerCase().indexOf('crashreport') && !blacklist.some(b => key.includes(b)));
+      }
 
       const Sentry = {
          main: window.__SENTRY__?.hub,
