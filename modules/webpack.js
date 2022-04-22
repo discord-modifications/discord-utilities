@@ -1,7 +1,11 @@
-if (typeof (Array.prototype.at) !== 'function') {
-   Array.prototype.at = function (index) {
-      return index < 0 ? this[this.length - Math.abs(index)] : this[index];
-   };
+if (typeof Array.prototype.at !== 'function') {
+   Object.defineProperty(Array.prototype, 'at', {
+      value: function at(index) {
+         return index < 0 ? this[this.length - Math.abs(index)] : this[index];
+      },
+      enumerable: false,
+      configurable: true
+   })
 }
 
 if (typeof (setImmediate) === 'undefined') {
