@@ -2,129 +2,227 @@ import LoggerModule from './logger.js';
 
 const Logger = LoggerModule.create('Patcher');
 
-export default class Patcher {
-   static _patches = [];
+class Patcher {
+   constructor() {
+      this.patches = [];
 
-   static getPatchesByCaller(id) {
+      this.after = this.after.bind(this);
+      this.create = this.create.bind(this);
+      this.before = this.before.bind(this);
+      this.instead = this.instead.bind(this);
+      this.unpatchAll = this.unpatchAll.bind(this);
+   }
+
+   create(name) {
+      return {
+         getPatchesByCaller: this.getPatchesByCaller,
+         instead: (...args) => this.instead(name, ...args),
+         after: (...args) => this.after(name, ...args),
+         before: (...args) => this.before(name, ...args),
+         unpatchAll: () => this.unpatchAll(name)
+      };
+   }
+
+   getPatchesByCaller(id) {
       if (!id) return [];
       const patches = [];
-      for (const patch of this._patches) for (const childPatch of patch.children) if (childPatch.caller === id) patches.push(childPatch);
+
+      for (const entry of this.patches) {
+         const store = [
+            ...entry.patches.before,
+            ...entry.patches.instead,
+            ...entry.patches.after
+         ];
+
+         for (const patch of store) {
+            if (patch.caller === id) {
+               patches.push(patch);
+            }
+         }
+      }
+
       return patches;
    }
 
-   static unpatchAll(caller) {
+   unpatchAll(caller) {
       const patches = this.getPatchesByCaller(caller);
       if (!patches.length) return;
-      for (const patch of patches) patch.unpatch();
+
+      for (const patch of patches) {
+         patch.unpatch();
+      }
    }
 
-   static create(name) {
-      return {
-         getPatchesByCaller: Patcher.getPatchesByCaller,
-         instead: (...args) => Patcher.instead(name, ...args),
-         after: (...args) => Patcher.after(name, ...args),
-         before: (...args) => Patcher.before(name, ...args),
-         unpatchAll: () => Patcher.unpatchAll(name)
-      };
-   }
-
-   static makeOverride(patch) {
+   override(patch) {
       return function () {
-         let returnValue, args = arguments;
+         if (
+            !patch.patches?.before.length &&
+            !patch.patches?.after.length &&
+            !patch.patches?.instead.length
+         ) {
+            patch.unpatch();
+            return new.target ? new patch.original(...arguments) : patch.original.apply(this, arguments);
+         }
 
-         if (!patch?.children?.length) return patch.originalFunction.apply(this, arguments);
+         let res;
+         let args = arguments;
 
-         for (const beforePatch of patch.children.filter(e => e.type === 'before')) {
+         const before = patch.patches.before;
+         for (let i = 0; i < before.length; i++) {
             try {
-               const tempArgs = beforePatch.callback(this, args, patch.originalFunction.bind(this));
-               if (Array.isArray(tempArgs)) args = tempArgs;
+               const temp = before[i].callback(this, args, patch.original.bind(this));
+               if (Array.isArray(temp)) args = temp;
             } catch (error) {
-               Logger.error(`Could not fire before patch for ${patch.functionName} of ${beforePatch.caller}`, error);
+               Logger.error(`Could not fire before patch for ${patch.func} of ${before[i].caller}`, error);
             }
          }
 
-         const insteadPatches = patch.children.filter(e => e.type === 'instead');
-
-         if (!insteadPatches.length) returnValue = patch.originalFunction.apply(this, args);
-
-         else for (const insteadPatch of insteadPatches) {
-            try {
-               const tempReturn = insteadPatch.callback(this, args, patch.originalFunction.bind(this));
-               if (typeof (tempReturn) !== 'undefined') returnValue = tempReturn;
-            } catch (error) {
-               Logger.error(`Could not fire instead patch for ${patch.functionName} of ${insteadPatch.caller}`, error);
+         const instead = patch.patches.instead;
+         if (!instead.length) {
+            if (new.target) {
+               res = new patch.original(...args);
+            } else {
+               res = patch.original.apply(this, args);
+            }
+         } else {
+            for (let i = 0; i < instead.length; i++) {
+               try {
+                  const ret = instead[i].callback(this, args, patch.original.bind(this));
+                  if (typeof ret !== 'undefined') res = ret;
+               } catch (error) {
+                  Logger.error(`Could not fire instead patch for ${patch.func} of ${instead[i].caller}`, error);
+               }
             }
          }
 
-         for (const afterPatch of patch.children.filter(e => e.type === 'after')) {
+         const after = patch.patches.after;
+         for (let i = 0; i < after.length; i++) {
             try {
-               const tempReturn = afterPatch.callback(this, args, returnValue, ret => (returnValue = ret));
-               if (typeof (tempReturn) !== 'undefined') returnValue = tempReturn;
+               const ret = after[i].callback(this, args, res, ret => (res = ret));
+               if (typeof ret !== 'undefined') res = ret;
             } catch (error) {
-               Logger.error(`Could not fire after patch for ${patch.functionName} of ${afterPatch.caller}`, error);
+               Logger.error(`Could not fire after patch for ${patch.func} of ${after[i].caller}`, error);
             }
          }
 
-         return returnValue;
+         if (patch.once) {
+            patch.unpatch();
+         }
+
+         return res;
       };
-   }
+   };
 
-   static pushPatch(caller, module, functionName) {
+   push([, mdl, func, , , once]) {
       const patch = {
-         caller,
-         module,
-         functionName,
-         originalFunction: module[functionName],
-         undo: () => {
-            patch.module[patch.functionName] = patch.originalFunction;
-            patch.children = [];
+         mdl,
+         func,
+         original: mdl[func],
+         once,
+         unpatch: () => {
+            patch.mdl[patch.func] = patch.original;
+            patch.patches = {
+               before: [],
+               after: [],
+               instead: []
+            };
          },
-         count: 0,
-         children: []
+         patches: {
+            before: [],
+            after: [],
+            instead: []
+         }
       };
 
-      module[functionName] = this.makeOverride(patch);
-      Object.assign(module[functionName], patch.originalFunction, {
-         toString: () => patch.originalFunction.toString(),
-         __originalFunction: patch.originalFunction
+      mdl[func] = this.override(patch);
+
+      const descriptors = Object.getOwnPropertyDescriptors(patch.original);
+      delete descriptors.length;
+
+      Object.defineProperties(mdl[func], {
+         ...descriptors,
+         toString: {
+            value: () => patch.original.toString(),
+            configurable: true,
+            enumerable: false
+         },
+         __original: {
+            value: patch.original,
+            configurable: true,
+            enumerable: false
+         }
       });
 
-      return this._patches.push(patch), patch;
+      this.patches.push(patch);
+      return patch;
    }
 
-   static doPatch(caller, module, functionName, callback, type = 'after', options = {}) {
-      let { displayName } = options;
-      const patch = this._patches.find(e => e.module === module && e.functionName === functionName) ?? this.pushPatch(caller, module, functionName);
-      if (typeof (displayName) !== 'string') displayName || module.displayName || module.name || module.constructor.displayName || module.constructor.name;
+   get([, mdl, func]) {
+      const patch = this.patches.find(p => p.mdl == mdl && p.func == func);
+      if (patch) return patch;
 
-      const child = {
+      return this.push(...arguments);
+   }
+
+   patch(caller, mdl, func, callback, type = 'after', once = false) {
+      if (!caller || typeof caller !== 'string') {
+         throw new TypeError('first argument "caller" must be of type string');
+      } else if (!mdl || !['function', 'object'].includes(typeof mdl)) {
+         throw new TypeError('second argument "mdl" must be of type function or object');
+      } else if (!func || typeof func !== 'string') {
+         throw new TypeError('third argument "func" must be of type string');
+      } else if (!callback || typeof callback !== 'function') {
+         throw new TypeError('fourth argument "callback" must be of type function');
+      } else if (!type || typeof type !== 'string' || !['after', 'before', 'instead'].includes(type)) {
+         throw new TypeError('fifth argument "type" must be of type string and any of the three: after, before, instead');
+      } else if (typeof mdl[func] === 'undefined') {
+         throw new ReferenceError(`function ${func} does not exist on the second argument (object or function)`);
+      }
+
+      const current = this.get(arguments);
+
+      const patch = {
          caller,
-         type,
-         id: patch.count,
+         id: current.patches?.[type]?.length ?? 0,
          callback,
          unpatch: () => {
-            patch.children.splice(patch.children.findIndex(cpatch => cpatch.id === child.id && cpatch.type === type), 1);
-            if (patch.children.length <= 0) {
-               const patchNum = this._patches.findIndex(p => p.module == module && p.functionName == functionName);
-               this._patches[patchNum].undo();
-               this._patches.splice(patchNum, 1);
-            }
+            // Remove the original patch this callback was from
+            const individual = current.patches?.[type].findIndex(p => p.id === patch.id);
+            if (~individual) current.patches?.[type].splice(individual, 1);
+
+            if (
+               current.patches?.before.length ||
+               current.patches?.after.length ||
+               current.patches?.instead.length
+            ) return;
+
+            // If no other patches on the module are remaining, completely remove all patches
+            // and re-assign the original module to its original place.
+            const module = this.patches.findIndex(p => p.mdl == mdl && p.func == func);
+
+            if (!~module) return;
+            this.patches[module]?.unpatch();
+            this.patches.splice(module, 1);
          }
       };
-      patch.children.push(child);
-      patch.count++;
-      return child.unpatch;
+
+      current.patches[type] ??= [];
+      current.patches[type].push(patch);
+
+      return patch.unpatch;
    }
 
-   static before(caller, module, functionName, callback) {
-      return this.doPatch(caller, module, functionName, callback, 'before');
+   after(caller, mdl, func, callback, once = false) {
+      return this.patch(caller, mdl, func, callback, 'after', once);
    }
 
-   static after(caller, module, functionName, callback) {
-      return this.doPatch(caller, module, functionName, callback, 'after');
+   before(caller, mdl, func, callback, once = false) {
+      return this.patch(caller, mdl, func, callback, 'before', once);
    }
 
-   static instead(caller, module, functionName, callback) {
-      return this.doPatch(caller, module, functionName, callback, 'instead');
+   instead(caller, mdl, func, callback, once = false) {
+      return this.patch(caller, mdl, func, callback, 'instead', once);
    }
-}
+};
+
+export default new Patcher();

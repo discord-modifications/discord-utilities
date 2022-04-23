@@ -9,14 +9,19 @@ export default {
       const Experiments = Webpack.findByProps('isDeveloper');
       Experiments._isDeveloper = Experiments.isDeveloper;
       Object.defineProperty(Experiments, 'isDeveloper', {
-         get: () => true
+         get: () => true,
+         configurable: true
       });
 
-      Experiments._changeCallbacks.forEach(c => c());
+      for (let i = 0; i < Experiments._changeCallbacks.length; i++) {
+         Experiments._changeCallbacks[i]();  
+      }
 
       return () => {
          Experiments.isDeveloper = Experiments._isDeveloper;
-         Experiments._changeCallbacks.forEach(c => c());
+         for (let i = 0; i < Experiments._changeCallbacks.length; i++) {
+            Experiments._changeCallbacks[i]();  
+         }
       };
    }
 };

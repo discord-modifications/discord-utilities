@@ -8,13 +8,13 @@ if (typeof Array.prototype.at !== 'function') {
    })
 }
 
-if (typeof (setImmediate) === 'undefined') {
+if (typeof setImmediate === 'undefined') {
    window.setImmediate = (callback) => setTimeout(callback, 0);
 }
 
 export class Filters {
    static byProps(...props) {
-      return (module) => props.every(prop => prop in module);
+      return (module) => props.every(prop => module[prop] !== void 0);
    }
 
    static byDisplayName(name, def = false) {
