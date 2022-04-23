@@ -11,7 +11,8 @@ export default {
 
       const blacklist = [
          'useAndTrack',
-         'TextTrack'
+         'TextTrack',
+         'useAnalyticsContext'
       ];
 
       const Trackers = Webpack.findModules(m => typeof m === 'object' && Object.keys(m).some(e => (~e.toLowerCase().indexOf('track') || ~e.toLowerCase().indexOf('analytics')) && !blacklist.some(b => ~e.indexOf(b))));
