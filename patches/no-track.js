@@ -14,7 +14,7 @@ export default {
          'TextTrack'
       ];
 
-      const Trackers = Webpack.findModules(m => typeof m === 'object' && Object.keys(m).some(e => (~e.toLowerCase().indexOf('track') || ~key.toLowerCase().indexOf('analytics')) && !blacklist.some(b => ~e.indexOf(b))));
+      const Trackers = Webpack.findModules(m => typeof m === 'object' && Object.keys(m).some(e => (~e.toLowerCase().indexOf('track') || ~e.toLowerCase().indexOf('analytics')) && !blacklist.some(b => ~e.indexOf(b))));
       const Reporters = Webpack.findModules(m => typeof m === 'object' && Object.keys(m).some(e => ~e.toLowerCase().indexOf('crashreport') && !blacklist.some(b => ~e.indexOf(b))));
 
       for (let i = 0; i < Trackers.length; i++) {
