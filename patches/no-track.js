@@ -14,32 +14,15 @@ export default {
          'TextTrack'
       ];
 
-      const Trackers = Webpack.findModules(m => Object.keys(m).find(e => ~e.toLowerCase().indexOf('track') && !blacklist.some(b => e.includes(b))));
-      const Reporters = Webpack.findModules(m => Object.keys(m).find(e => ~e.toLowerCase().indexOf('crashreport') && !blacklist.some(b => e.includes(b))));
-
-      function traverse(object, filter) {
-         const keys = [...Object.keys(object), ...Object.keys(object.__proto__)];
-         for (const key of keys.filter(filter)) {
-            if (!['function', 'object'].includes(typeof object[key])) {
-               continue;
-            }
-
-            if (typeof object[key] === 'object') {
-               traverse(object[key], filter);
-            } else {
-               try {
-                  Patcher.instead(object, key, () => { });
-               } catch { }
-            }
-         }
-      };
+      const Trackers = Webpack.findModules(m => typeof m === 'object' && Object.keys(m).some(e => ~e.toLowerCase().indexOf('track') && !blacklist.some(b => ~e.indexOf(b))));
+      const Reporters = Webpack.findModules(m => typeof m === 'object' && Object.keys(m).some(e => ~e.toLowerCase().indexOf('crashreport') && !blacklist.some(b => ~e.indexOf(b))));
 
       for (let i = 0; i < Trackers.length; i++) {
-         traverse(Trackers[i], key => ~key.toLowerCase().indexOf('track') && !blacklist.some(b => key.includes(b)));
+         traverse(Trackers[i], key => ~key.toLowerCase().indexOf('track') && !blacklist.some(b => ~key.indexOf(b)));
       }
 
       for (let i = 0; i < Reporters.length; i++) {
-         traverse(Reporters[i], key => ~key.toLowerCase().indexOf('crashreport') && !blacklist.some(b => key.includes(b)));
+         traverse(Reporters[i], key => ~key.toLowerCase().indexOf('crashreport') && !blacklist.some(b => ~key.indexOf(b)));
       }
 
       const Sentry = {
@@ -76,5 +59,24 @@ export default {
             window.console = window.__oldConsole;
          }
       };
+   }
+};
+
+function traverse(object, filter) {
+   const keys = [...Object.keys(object), ...Object.keys(object.__proto__)].filter(filter);
+
+   for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      if (!~['function', 'object'].indexOf(typeof object[key])) {
+         continue;
+      }
+
+      if (typeof object[key] === 'object') {
+         traverse(object[key], filter);
+      } else {
+         try {
+            Patcher.instead(object, key, () => { });
+         } catch { }
+      }
    }
 };
