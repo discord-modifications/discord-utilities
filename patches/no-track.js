@@ -20,7 +20,6 @@ export default {
    executor: async () => {
       await Webpack.whenReady;
 
-      const start = new Date();
       const Trackers = Webpack.findModules(m => typeof m === 'object' && [...Object.keys(m), ...Object.keys(m.__proto__), ...Object.keys(m.prototype ?? {})].some(e => (~e.toLowerCase().indexOf('track') || ~e.toLowerCase().indexOf('analytics'))));
       const Reporters = Webpack.findModules(m => typeof m === 'object' && [...Object.keys(m), ...Object.keys(m.__proto__), ...Object.keys(m.prototype ?? {})].some(e => ~e.toLowerCase().indexOf('crashreport')));
 
