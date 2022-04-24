@@ -31,7 +31,7 @@ export class Logger {
    }
 
    #log(type, ...message) {
-      console[this.#parseType(type)](`%c[DiscordUtilities:${this.module}]%c`, `color: ${this.#getColor(type)}; font-weight: 700;`, '', ...message);
+      console[this.#parseType(type)](`%c[Discord Utilities${this.module ? `:${this.module}` : ''}]%c`, `color: ${this.#getColor(type)}; font-weight: 700;`, '', ...message);
    }
 
    log(...message) {

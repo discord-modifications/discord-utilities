@@ -1,7 +1,7 @@
 import { LoggerModule } from './modules/index.js';
 import * as patches from './patches/index.js';
 
-const Logger = LoggerModule.create('Renderer');
+const Logger = LoggerModule.create();
 const manifest = DiscordUtilities.manifest;
 
 for (const patch of Object.values(patches)) {
