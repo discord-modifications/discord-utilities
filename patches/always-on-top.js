@@ -1,13 +1,9 @@
-import { ipcRenderer } from '../node/electron.js';
-
 export default {
    displayName: 'Always On Top',
    id: 'always-on-top',
    executor: async () => {
-      ipcRenderer.send('DISCORD_UTILITIES_ALWAYS_ON_TOP', true);
+      DiscordUtilities.IPC.send('DISCORD_UTILITIES_ALWAYS_ON_TOP', true);
 
-      return () => {
-         ipcRenderer.send('DISCORD_UTILITIES_ALWAYS_ON_TOP', false);
-      };
+      return () => DiscordUtilities.IPC.send('DISCORD_UTILITIES_ALWAYS_ON_TOP', false);
    }
 };

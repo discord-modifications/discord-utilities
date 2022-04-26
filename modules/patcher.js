@@ -1,6 +1,6 @@
-import LoggerModule from './logger.js';
+import createLogger from './logger.js';
 
-const Logger = LoggerModule.create('Patcher');
+const Logger = createLogger('Patcher');
 
 class Patcher {
    constructor() {
@@ -225,4 +225,6 @@ class Patcher {
    }
 };
 
-export default new Patcher();
+const instance = new Patcher();
+export const create = instance.create;
+export default instance;

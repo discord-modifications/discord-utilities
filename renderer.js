@@ -1,12 +1,11 @@
-import { LoggerModule } from './modules/index.js';
-import * as patches from './patches/index.js';
+import createLogger from './modules/logger';
+import * as patches from './patches/index';
 
-const Logger = LoggerModule.create();
-const manifest = DiscordUtilities.manifest;
+const Logger = createLogger();
 
 for (const patch of Object.values(patches)) {
    const mdl = patch.displayName?.toLowerCase() ?? 'Unknown';
-   if (!manifest.settings[patch.id]) continue;
+   if (!DiscordUtilities.manifest.settings[patch.id]) continue;
 
    try {
       patch.executor().then(() => Logger.log(`Initialized ${mdl} patch.`));

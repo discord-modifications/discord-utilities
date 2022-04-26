@@ -53,10 +53,6 @@ export class Logger {
    debug(...message) {
       this.#log('debug', ...message);
    }
-
-   static create(name) {
-      return new Logger(name);
-   }
 }
 
-export default Logger;
+export default (name) => new Logger(name);

@@ -1,15 +1,22 @@
-const { contextBridge } = require('electron');
-const manifest = require('./index.json');
+const { ipcRenderer, contextBridge } = require('electron');
 const path = require('path');
 
+const manifest = require('./index.json');
+
 const DiscordUtilites = {
-   executeJS(js) {
-      return eval(js);
+   manifest,
+   IPC: {
+      send: (event, ...args) => {
+         if (!~event.indexOf('DISCORD_UTILITIES')) {
+            throw new Error('You may not send IPC events for anything else.');
+         }
+
+         return ipcRenderer.send(event, ...args);
+      }
    },
    getBasePath() {
-      return path.resolve(__dirname, "..");
-   },
-   manifest
+      return path.resolve(__dirname, '..');
+   }
 };
 
 // Expose internals

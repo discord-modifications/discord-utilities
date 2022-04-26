@@ -1,7 +1,7 @@
-import Patchers from '../modules/patcher.js';
+import { create } from '../modules/patcher.js';
 import Webpack from '../modules/webpack.js';
 
-const Patcher = Patchers.create('no-track');
+const Patcher = create('no-track');
 
 const blacklist = [
    'useTrackThreadArchivalDurationUpsell',

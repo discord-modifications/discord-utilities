@@ -1,7 +1,7 @@
-import Patchers from '../modules/patcher.js';
+import { create } from '../modules/patcher.js';
 import Webpack from '../modules/webpack.js';
 
-const Patcher = Patchers.create('persistent-token');
+const Patcher = create('persistent-token');
 
 export default {
    displayName: 'Persistent Token',
