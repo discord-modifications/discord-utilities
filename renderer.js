@@ -1,5 +1,5 @@
-import createLogger from './modules/logger';
-import * as patches from './patches/index';
+import createLogger from './modules/logger.js';
+import * as patches from './patches/index.js';
 
 const Logger = createLogger();
 
