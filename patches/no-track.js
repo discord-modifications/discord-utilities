@@ -4,6 +4,7 @@ import Webpack from '../modules/webpack.js';
 const Patcher = create('no-track');
 
 const blacklist = [
+   'useTrackExpressionPickerInlineStickersUpsell',
    'useTrackThreadArchivalDurationUpsell',
    'useAndTrackNonFriendDMAccept',
    'StreamRTCAnalyticsContext',
