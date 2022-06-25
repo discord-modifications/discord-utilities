@@ -7,8 +7,8 @@
    "settings": {
       "no-track": true,
       "persistent-token": true,
-      "minimum-size": true,
-      "f8fix": true,
+      "remove-minimum-size": true,
+      "f8-fix": true,
       "experiments": true,
       "devtools-warning": true,
       "always-on-top": false
